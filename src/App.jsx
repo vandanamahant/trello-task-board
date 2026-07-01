@@ -3,13 +3,18 @@ import { useState, useEffect } from "react";
 import Column from "./components/Column";
 import "./App.css";
 
+const COLUMNS_CONFIG = [
+  { id: "todo", title: "📝 To Do", type: "todo" },
+  { id: "progress", title: "⚙️ In Progress", type: "progress" },
+  { id: "done", title: "✅ Done", type: "done" }
+];
+
 function App() {
   const [taskText, setTaskText] = useState("");
   const [priority, setPriority] = useState("Medium");
   const [search, setSearch] = useState("");
   const [tasks, setTasks] = useState([]);
 
-  // Load tasks from localStorage on mount
   useEffect(() => {
     const savedTasks = JSON.parse(localStorage.getItem("kanban_tasks"));
     if (savedTasks && savedTasks.length > 0) {
@@ -17,12 +22,10 @@ function App() {
     }
   }, []);
 
-  // Sync tasks to localStorage whenever state changes
   useEffect(() => {
     localStorage.setItem("kanban_tasks", JSON.stringify(tasks));
   }, [tasks]);
 
-  // Handler to add a new task
   const handleAddTask = () => {
     if (taskText.trim() === "") {
       alert("Please enter a task");
@@ -33,7 +36,7 @@ function App() {
       id: Date.now(),
       text: taskText.trim(),
       priority: priority,
-      status: "todo", // Default column status
+      status: "todo",
     };
 
     setTasks([...tasks, newTask]);
@@ -41,12 +44,10 @@ function App() {
     setPriority("Medium");
   };
 
-  // Handler to delete a task universally
   const handleDeleteTask = (id) => {
     setTasks(tasks.filter((task) => task.id !== id));
   };
 
-  // Handler to move task forward or backward across columns
   const handleMoveTask = (id, currentStatus, direction) => {
     setTasks(
       tasks.map((task) => {
@@ -64,7 +65,6 @@ function App() {
     );
   };
 
-  // Handler to update inline edited text
   const handleUpdateTaskText = (id, columnType, updatedText) => {
     setTasks(
       tasks.map((task) => {
@@ -76,16 +76,10 @@ function App() {
     );
   };
 
-  // Filter tasks by column status
-  const todoTasks = tasks.filter((t) => t.status === "todo");
-  const progressTasks = tasks.filter((t) => t.status === "progress");
-  const doneTasks = tasks.filter((t) => t.status === "done");
-
   return (
     <div className="container">
       <h1>Task Management Board</h1>
 
-      {/* Task Input Section */}
       <div className="top-bar">
         <input
           type="text"
@@ -106,7 +100,6 @@ function App() {
         <button onClick={handleAddTask}>Add Task</button>
       </div>
 
-      {/* Global Filter Search */}
       <input
         className="search"
         type="text"
@@ -115,37 +108,19 @@ function App() {
         onChange={(e) => setSearch(e.target.value)}
       />
 
-      {/* Kanban Board Grid */}
       <div className="board">
-        <Column
-          title="📝 To Do"
-          columnType="todo"
-          tasks={todoTasks}
-          search={search}
-          onDelete={handleDeleteTask}
-          onMove={handleMoveTask}
-          onUpdate={handleUpdateTaskText}
-        />
-
-        <Column
-          title="⚙️ In Progress"
-          columnType="progress"
-          tasks={progressTasks}
-          search={search}
-          onDelete={handleDeleteTask}
-          onMove={handleMoveTask}
-          onUpdate={handleUpdateTaskText}
-        />
-
-        <Column
-          title="✅ Done"
-          columnType="done"
-          tasks={doneTasks}
-          search={search}
-          onDelete={handleDeleteTask}
-          onMove={handleMoveTask}
-          onUpdate={handleUpdateTaskText}
-        />
+        {COLUMNS_CONFIG.map((col) => (
+          <Column
+            key={col.id}
+            title={col.title}
+            columnType={col.type}
+            tasks={tasks.filter((t) => t.status === col.type)}
+            search={search}
+            onDelete={handleDeleteTask}
+            onMove={handleMoveTask}
+            onUpdate={handleUpdateTaskText}
+          />
+        ))}
       </div>
     </div>
   );
